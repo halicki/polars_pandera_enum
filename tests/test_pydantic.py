@@ -50,50 +50,6 @@ def test_work_with_polars_original():
         PydanticModel.model_validate(invalid_dict)
 
 
-def test_work_with_polars_manual():
-    """Test the direct approach with Annotated and BeforeValidator."""
-    import polars as pl
-    import pandera.polars as pa
-    from pandera.typing.polars import DataFrame, Series
-    from typing import Any, Annotated
-    from pandera.errors import SchemaError
-
-    class SimpleSchema(pa.DataFrameModel):
-        str_col: Series[str] = pa.Field(unique=True)
-
-    # Define a custom validator for DataFrame[SimpleSchema]
-    def validate_pandera_df(value: Any) -> DataFrame[SimpleSchema]:
-        if isinstance(value, dict):
-            df = pl.DataFrame(value)
-            try:
-                return DataFrame[SimpleSchema](df)
-            except SchemaError as e:
-                raise ValueError(f"Pandera validation error: {str(e)}")
-        elif isinstance(value, pl.DataFrame):
-            try:
-                return DataFrame[SimpleSchema](value)
-            except SchemaError as e:
-                raise ValueError(f"Pandera validation error: {str(e)}")
-        return value
-
-    # Use Annotated to attach validator to the type
-    PanderaDataFrame = Annotated[
-        DataFrame[SimpleSchema], pydantic.BeforeValidator(validate_pandera_df)
-    ]
-
-    class PydanticModel(pydantic.BaseModel):
-        x: int
-        df: PanderaDataFrame
-
-        model_config = {"arbitrary_types_allowed": True}
-
-    model = PydanticModel.model_validate(valid_dict)
-    assert isinstance(model.df, pl.DataFrame)
-
-    # This should raise a ValidationError because the pandera validator catches the duplicate
-    with pytest.raises(pydantic.ValidationError):
-        PydanticModel.model_validate(invalid_dict)
-
 
 def test_work_with_polars_field():
     """Test using our PanderaPolarsField for cleaner integration."""
