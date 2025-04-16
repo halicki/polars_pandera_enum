@@ -110,7 +110,8 @@ def test_dataframe_like_behavior():
     # Test basic DataFrame-like operations
     assert len(df) == 2
     assert df["str_col"].to_list() == ["hello", "world"]
-    assert df.dtypes["str_col"] == pl.Utf8
+    # Use schema information rather than df.dtypes
+    assert df["str_col"].dtype == pl.Utf8
     
     # Test method delegation
     filtered = df.filter(pl.col("str_col") == "hello")

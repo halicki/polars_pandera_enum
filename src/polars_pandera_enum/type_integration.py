@@ -187,7 +187,15 @@ class PolarsDataFrame(Generic[T]):
             return False
         return self.df.equals(other.df)
     
-    # DataFrame delegation methods to make the object behave more like a DataFrame
+    def to_dict(self) -> dict[str, list[Any]]:
+        """Convert DataFrame to dictionary with Python lists."""
+        # Custom implementation since to_dict() in Polars returns Series objects
+        result = {}
+        for col in self.df.columns:
+            result[col] = self.df[col].to_list()
+        return result
+    
+    # Special methods that need explicit implementation (can't be forwarded with __getattr__)
     def __getitem__(self, item: Any) -> Any:
         """Get item from the DataFrame."""
         return self.df.__getitem__(item)
@@ -196,29 +204,7 @@ class PolarsDataFrame(Generic[T]):
         """Return length of the DataFrame."""
         return len(self.df)
     
-    @property
-    def shape(self) -> tuple[int, int]:
-        """Return shape of the DataFrame."""
-        return self.df.shape
-    
-    @property
-    def columns(self) -> list[str]:
-        """Return columns of the DataFrame."""
-        return self.df.columns
-    
-    @property
-    def dtypes(self) -> dict[str, Any]:
-        """Return dtypes of the DataFrame."""
-        return {col: self.df[col].dtype for col in self.df.columns}
-    
-    def to_dict(self) -> dict[str, list[Any]]:
-        """Convert DataFrame to dictionary with Python lists."""
-        result = {}
-        for col in self.df.columns:
-            result[col] = self.df[col].to_list()
-        return result
-    
-    # Forward method calls to the DataFrame
+    # Forward everything else to the underlying DataFrame
     def __getattr__(self, name: str) -> Any:
         """Forward attribute access to the DataFrame."""
         if name.startswith('_'):

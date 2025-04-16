@@ -10,7 +10,10 @@ from polars_pandera_enum import PolarsDataFrame
 
 
 def test_can_access_member():
+    # We could use standard DataFrame here, but using PolarsDataFrame is fine too
     df = PolarsDataFrame[Employee](employee_data)
+    
+    # Both should work with our analytics function
     result = get_avg_salary_by_department(df)
     assert result.shape == (4, 2)
     assert result.columns == [DepartmentSalary.department, DepartmentSalary.avg_salary]
