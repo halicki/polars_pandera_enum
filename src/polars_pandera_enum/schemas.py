@@ -20,3 +20,16 @@ class Employee(pa.DataFrameModel):
 
     class Config:
         coerce = True
+
+
+class Product(pa.DataFrameModel):
+    """Schema for product data."""
+    
+    id: Series[int] = pa.Field(ge=1)
+    name: Series[str] = pa.Field()
+    price: Series[float] = pa.Field(ge=0)
+    category: Series[str] = pa.Field()
+    in_stock: Series[bool] = pa.Field()
+    
+    class Config:
+        coerce = True
