@@ -27,6 +27,29 @@ def test_work_with_pandas():
         PydanticModel.model_validate(invalid_dict)
 
 
+@pytest.mark.xfail(reason="Native DataFrame[Schema] without validation will fail")
+def test_work_with_polars_original():
+    """Original test that tries to use DataFrame[Schema] directly without validation - will fail."""
+    import polars as pl
+    import pandera.polars as pa
+    from pandera.typing.polars import DataFrame, Series
+
+    class SimpleSchema(pa.DataFrameModel):
+        str_col: Series[str] = pa.Field(unique=True)
+
+    class PydanticModel(pydantic.BaseModel):
+        x: int
+        df: DataFrame[SimpleSchema]  # This will fail without validation
+        
+        model_config = {"arbitrary_types_allowed": True}
+
+    # These will fail because there's no proper validation/conversion
+    PydanticModel.model_validate(valid_dict)
+    
+    with pytest.raises(pydantic.ValidationError):
+        PydanticModel.model_validate(invalid_dict)
+
+
 def test_work_with_polars_manual():
     """Test the direct approach with Annotated and BeforeValidator."""
     import polars as pl
