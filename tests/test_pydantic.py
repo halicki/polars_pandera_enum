@@ -28,17 +28,37 @@ def test_work_with_pandas():
 
 
 def test_work_with_polars():
+    import polars as pl
     import pandera.polars as pa
     from pandera.typing.polars import DataFrame, Series
+    from typing import Any
+    from pandera.errors import SchemaError
 
     class SimpleSchema(pa.DataFrameModel):
         str_col: Series[str] = pa.Field(unique=True)
 
     class PydanticModel(pydantic.BaseModel):
         x: int
-        df: DataFrame[SimpleSchema]
+        df: Any  # Use Any instead of DataFrame[SimpleSchema]
+        
+        model_config = {"arbitrary_types_allowed": True}
+        
+        @pydantic.field_validator("df", mode="before")
+        @classmethod
+        def validate_df(cls, value: Any) -> Any:
+            if isinstance(value, dict):
+                df = pl.DataFrame(value)
+                try:
+                    # Validate with SimpleSchema
+                    return DataFrame[SimpleSchema](df)
+                except SchemaError as e:
+                    # Convert Pandera error to Pydantic error
+                    raise ValueError(f"Pandera validation error: {str(e)}")
+            return value
 
-    PydanticModel.model_validate(valid_dict)
-
+    model = PydanticModel.model_validate(valid_dict)
+    assert isinstance(model.df, pl.DataFrame)
+    
+    # This should raise a ValidationError because the pandera validator catches the duplicate
     with pytest.raises(pydantic.ValidationError):
         PydanticModel.model_validate(invalid_dict)
