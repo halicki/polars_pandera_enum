@@ -1,8 +1,9 @@
 import pandera.polars as pa
 import polars as pl
-from pandera.typing.polars import DataFrame, Series
+from pandera.typing.polars import Series
 
 from .schemas import Employee
+from .type_integration import PolarsDataFrame
 
 
 class DepartmentSalary(pa.DataFrameModel):
@@ -13,11 +14,13 @@ class DepartmentSalary(pa.DataFrameModel):
 
 
 def get_avg_salary_by_department(
-    df: DataFrame[Employee],
-) -> DataFrame[DepartmentSalary]:
+    df: PolarsDataFrame[Employee],
+) -> PolarsDataFrame[DepartmentSalary]:
     """Calculate average salary by department using schema attributes."""
-    return DataFrame[DepartmentSalary](
+    result_df = (
         df.sort(Employee.department)
         .group_by(Employee.department)
         .agg(pl.col(Employee.salary).mean().alias(DepartmentSalary.avg_salary))
     )
+    
+    return PolarsDataFrame[DepartmentSalary](result_df)
