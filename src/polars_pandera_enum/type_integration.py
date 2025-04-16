@@ -113,7 +113,7 @@ class PolarsDataFrame(Generic[T]):
         schema_args = get_args(_source_type)
         
         # Determine the validator class to use
-        validator_cls: Type[PolarsDataFrame] = cls
+        validator_cls: Type["PolarsDataFrame[Any]"] = cls
         if schema_args:
             # Get first type argument which should be the schema
             schema_type = schema_args[0]
@@ -122,18 +122,18 @@ class PolarsDataFrame(Generic[T]):
             validator_cls = specialized
         
         # Define the serializer function
-        def serialize_dataframe(instance: Any) -> dict:
+        def serialize_dataframe(instance: Any) -> dict[str, list[Any]]:
             if not hasattr(instance, "df"):
                 return {}
             
             # Convert to a Python dict with lists
-            result = {}
+            result: dict[str, list[Any]] = {}
             for col in instance.df.columns:
                 result[col] = instance.df[col].to_list()
             return result
         
         # Define a validation function that can properly handle nested PolarsDataFrame instances
-        def validate_df_field(obj: Any, info: Any) -> PolarsDataFrame:
+        def validate_df_field(obj: Any, info: Any) -> "PolarsDataFrame[Any]":
             if isinstance(obj, validator_cls):
                 # If it's already a PolarsDataFrame with the right schema, return it
                 return obj
@@ -154,12 +154,12 @@ class PolarsDataFrame(Generic[T]):
         )
     
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls) -> list[Any]:
         """Legacy Pydantic v1 validation support."""
-        yield cls.validate
+        return [cls.validate]
     
     @classmethod
-    def validate(cls, value: Any) -> "PolarsDataFrame":
+    def validate(cls, value: Any) -> "PolarsDataFrame[Any]":
         """
         Validate a value against this schema type.
         

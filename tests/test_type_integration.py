@@ -32,7 +32,7 @@ class OrderSchema(pa.DataFrameModel):
     amount: Series[float] = pa.Field(ge=0)
 
 
-def test_polars_dataframe_basic():
+def test_polars_dataframe_basic() -> None:
     """Test basic functionality of PolarsDataFrame."""
     # Test creating from dictionary
     df = PolarsDataFrame[SimpleSchema](valid_dict)
@@ -50,7 +50,7 @@ def test_polars_dataframe_basic():
     assert df.shape == (2, 1)
 
 
-def test_pydantic_integration_without_arbitrary_types():
+def test_pydantic_integration_without_arbitrary_types() -> None:
     """Test that PolarsDataFrame works in Pydantic models without arbitrary_types_allowed."""
     class PydanticModel(pydantic.BaseModel):
         x: int
@@ -67,7 +67,7 @@ def test_pydantic_integration_without_arbitrary_types():
         PydanticModel.model_validate({"x": 1, "df": invalid_dict})
 
 
-def test_multiple_dataframes():
+def test_multiple_dataframes() -> None:
     """Test using multiple PolarsDataFrame fields with different schemas."""
     class AppData(pydantic.BaseModel):
         users: PolarsDataFrame[UserSchema]
@@ -103,7 +103,7 @@ def test_multiple_dataframes():
         AppData.model_validate(invalid_users_data)
 
 
-def test_dataframe_like_behavior():
+def test_dataframe_like_behavior() -> None:
     """Test that PolarsDataFrame behaves like a regular Polars DataFrame."""
     df = PolarsDataFrame[SimpleSchema](valid_dict)
     
@@ -120,7 +120,7 @@ def test_dataframe_like_behavior():
     assert filtered["str_col"][0] == "hello"
 
 
-def test_serialization():
+def test_serialization() -> None:
     """Test serialization of PolarsDataFrame."""
     df = PolarsDataFrame[SimpleSchema](valid_dict)
     

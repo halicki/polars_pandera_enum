@@ -9,7 +9,7 @@ from polars_pandera_enum.schemas import Employee
 from polars_pandera_enum import PolarsDataFrame
 
 
-def test_can_access_member():
+def test_can_access_member() -> None:
     # We could use standard DataFrame here, but using PolarsDataFrame is fine too
     df = PolarsDataFrame[Employee](employee_data)
     
